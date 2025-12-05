@@ -19,6 +19,10 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+app.use("/api/products", require("./routes/productRoutes"));
+app.use("/api/enquiries", require("./routes/enquiryRoutes"));
+
+
 app.get("/health", (req, res) => {
   res.status(200).json({
     success: true,
