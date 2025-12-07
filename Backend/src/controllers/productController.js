@@ -3,24 +3,35 @@ const pool = require("../config/database");
 exports.getProducts = async (req, res) => {
   try {
     const { search = "", category = "", page = 1, limit = 10 } = req.query;
-    const offset = (page - 1) * limit;
+    
+    const pageNum = parseInt(page);
+    const limitNum = parseInt(limit);
+    const offset = (pageNum - 1) * limitNum;
 
     const query = `
-    SELECT *
+    SELECT *, count(*) OVER() AS total_count 
     FROM products
     WHERE ($1 = '' OR name ILIKE '%' || $1 || '%')
     AND ($2 = '' OR category = $2)
     ORDER BY created_At DESC
     LIMIT $3 OFFSET $4
     `;
-    const values = [search, category, limit, offset];
+    
+    const values = [search, category, limitNum, offset];
     const result = await pool.query(query, values);
+
+    const totalItems = result.rows.length > 0 ? parseInt(result.rows[0].total_count) : 0;
+    const totalPages = Math.ceil(totalItems / limitNum);
 
     res.status(200).json({
       success: true,
-      page: Number(page),
-      limit: Number(limit),
       data: result.rows,
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        totalItems,
+        totalPages,
+      },
       timestamp: new Date().toLocaleTimeString(),
     });
   } catch (error) {
@@ -28,7 +39,6 @@ exports.getProducts = async (req, res) => {
     res.status(500).json({
       success: false,
       error: error.message,
-      timestamp: new Date().toLocaleTimeString(),
     });
   }
 };

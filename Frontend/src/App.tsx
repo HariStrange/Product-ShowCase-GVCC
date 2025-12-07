@@ -1,35 +1,60 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
-
+import { BrowserRouter, Route, Navigate, Routes } from "react-router-dom";
+import SideBarLayout from "./Layouts/sidebarLayout";
+import ProductList from "./Pages/products/productList";
+import ProductDetails from "./Pages/products/productDetails";
+import { Toaster } from "sonner";
+import EnquiryList from "./Pages/enquiries/EnquirieList";
+import LoginPage from "./Pages/loginPage/LoginPage";
+import { ThemeProvider } from "@/contexts/themeContext";
+import { AuthProvider } from "./contexts/authContext";
+import NotFound from "./Pages/Not Found page/NotFound";
+import ProtectedRoute from "./utils/ProtectedRoute";
+import Unauthorized from "./Pages/Unauthorized Page/Unauthorized";
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <ThemeProvider>
+      <div className="bg-background min-h-screen">
+        <BrowserRouter>
+          <AuthProvider>
+            <Routes>
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/" element={<Navigate to="/products" replace />} />
+              <Route
+                path="/products"
+                element={
+                  <SideBarLayout>
+                    <ProductList />
+                  </SideBarLayout>
+                }
+              />
+              <Route
+                path="/products/:id"
+                element={
+                  <SideBarLayout>
+                    <ProductDetails />
+                  </SideBarLayout>
+                }
+              />
+              <Route element={<ProtectedRoute allowedRoles={["ADMIN"]} />}>
+                <Route
+                  path="/enquiries"
+                  element={
+                    <SideBarLayout>
+                      <EnquiryList />
+                    </SideBarLayout>
+                  }
+                />
+              </Route>
+
+              <Route path="/unauthorized" element={<Unauthorized />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </AuthProvider>
+        </BrowserRouter>
+        <Toaster position="top-right" />
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    </ThemeProvider>
+  );
 }
 
-export default App
+export default App;
